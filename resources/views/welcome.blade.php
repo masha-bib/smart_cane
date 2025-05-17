@@ -26,23 +26,23 @@
     <div class="absolute inset-0 z-0 pointer-events-none">
         @for ($i = 0; $i < 100; $i++) {{-- Jumlah bintang --}}
             <div class="absolute bg-white rounded-full animate-twinkle" style="
-                            left: {{ rand(1, 99) }}%;
-                            top: {{ rand(1, 99) }}%; /* Bintang sekarang bisa di seluruh halaman */
-                            width: {{ rand(1, 3) }}px;
-                            height: {{ rand(1, 3) }}px;
-                            animation-delay: {{ rand(0, 3000) / 1000 }}s;
-                            animation-duration: {{ rand(2000, 4000) / 1000 }}s;
-                        "></div>
+                                    left: {{ rand(1, 99) }}%;
+                                    top: {{ rand(1, 99) }}%; /* Bintang sekarang bisa di seluruh halaman */
+                                    width: {{ rand(1, 3) }}px;
+                                    height: {{ rand(1, 3) }}px;
+                                    animation-delay: {{ rand(0, 3000) / 1000 }}s;
+                                    animation-duration: {{ rand(2000, 4000) / 1000 }}s;
+                                "></div>
         @endfor
     </div>
 
     <!-- Header (sekarang relatif terhadap body) -->
     <header
         class="relative z-20 flex flex-col md:flex-row justify-between items-center p-6 sm:p-8 w-full max-w-7xl mx-auto">
-        <div class="flex items-center text-xl font-bold mb-4 md:mb-0">
-            <span class="w-4 h-4 bg-white rounded-full mr-2.5"></span>
-            LOGO
-        </div>
+        <span
+            class="self-center text-2xl font-semibold whitespace-nowrap text-gray-100 dark:text-white hover:text-indigo-400 dark:hover:text-indigo-300 transition-colors">
+            Smart<span class="text-indigo-400 dark:text-indigo-300">Cane</span>
+        </span>
 
         {{-- Navigasi --}}
         <nav class="hidden md:flex flex-wrap justify-center space-x-4 sm:space-x-6 text-sm my-4 md:my-0">
@@ -77,55 +77,58 @@
         @endif
     </header>
 
-   <!-- Main Content (sekarang relatif terhadap body) -->
-<main class="relative z-20 text-center py-12 sm:py-16 md:py-20 px-4 flex-grow w-full max-w-5xl mx-auto">
-    {{-- text-center di sini akan membantu memusatkan div anak jika div anak adalah inline-block --}}
+    <!-- Main Content (sekarang relatif terhadap body) -->
+    <main class="relative z-20 text-center py-12 sm:py-16 md:py-20 px-4 flex-grow w-full max-w-5xl mx-auto">
+        {{-- text-center di sini akan membantu memusatkan div anak jika div anak adalah inline-block --}}
 
-    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8">
-        Selamat datang di Smart Cane
-    </h1>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8">
+            Selamat datang di
+            <span class="whitespace-nowrap"> {{-- Mencegah pecah baris antara Smart dan Cane --}}
+                Smart<span class="text-indigo-400 dark:text-indigo-300">Cane</span>
+            </span>
+        </h1>
 
-    <p class="text-lg sm:text-xl max-w-2xl mx-auto text-white text-opacity-90 leading-relaxed mb-8 sm:mb-10">
-        Platform pemantauan Smart Cane: inovasi teknologi IoT untuk membantu penyandang tunanetra beraktivitas
-        dengan lebih aman, mandiri, dan percaya diri.
-    </p>
+        <p class="text-lg sm:text-xl max-w-2xl mx-auto text-white text-opacity-90 leading-relaxed mb-8 sm:mb-10">
+            Platform pemantauan Smart Cane: inovasi teknologi IoT untuk membantu penyandang tunanetra beraktivitas
+            dengan lebih aman, mandiri, dan percaya diri.
+        </p>
 
-    {{-- Unordered List untuk fitur --}}
-    {{-- Hapus mx-auto, tambahkan inline-block --}}
-    <div class="max-w-xl inline-block">
-        {{-- Buat h2 rata kiri di dalam kontainer ini --}}
-        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4 text-left pl-11">
-            Melalui dashboard ini, Anda dapat:
-        </h2>
-        {{-- ul juga akan rata kiri, dengan list-outside dan padding kiri untuk indentasi --}}
-        <ul class="space-y-3 text-base sm:text-lg text-white text-opacity-80
+        {{-- Unordered List untuk fitur --}}
+        {{-- Hapus mx-auto, tambahkan inline-block --}}
+        <div class="max-w-xl inline-block">
+            {{-- Buat h2 rata kiri di dalam kontainer ini --}}
+            <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4 text-left pl-11">
+                Melalui dashboard ini, Anda dapat:
+            </h2>
+            {{-- ul juga akan rata kiri, dengan list-outside dan padding kiri untuk indentasi --}}
+            <ul class="space-y-3 text-base sm:text-lg text-white text-opacity-80
                    list-disc list-outside
                    text-left
                    pl-12"> {{-- Sesuaikan pl-5 ini agar teks item list sejajar dengan teks h2 --}}
-            <li>Memantau data real-time dari tongkat pintar</li>
-            <li>Melihat lokasi pengguna secara langsung</li>
-            <li>Menerima notifikasi saat terjadi kondisi darurat</li>
-            <li>Mengakses riwayat pergerakan dan aktivitas pengguna</li>
-        </ul>
-    </div>
-</main>
-
-        <!-- Landscape Layers (sekarang relatif terhadap body) -->
-        {{-- Warna lanskap mungkin perlu disesuaikan agar kontras dengan gradien baru jika warnanya sama --}}
-        <div class="relative bottom-0 left-0 w-full h-[40%] sm:h-[50%] md:h-[55%] z-10 pointer-events-none mt-auto">
-            <div class="absolute bottom-0 left-0 w-full h-full bg-brand-purple-mountain-far z-[1]"
-                style="border-top-left-radius: 50% 20%; border-top-right-radius: 60% 30%;">
-            </div>
-            <div class="absolute bottom-0 left-0 w-[110%] h-[80%] bg-brand-purple-mountain-mid z-[2]"
-                style="border-top-left-radius: 40% 30%; border-top-right-radius: 55% 25%; transform: translateX(-5%);">
-            </div>
-            <div class="absolute bottom-0 left-0 w-full h-[60%] bg-brand-purple-forest-front z-[3]"
-                style="border-top-left-radius: 30px 60px; border-top-right-radius: 40px 50px;">
-            </div>
-            <div class="absolute bottom-0 left-0 w-[105%] h-[50%] bg-brand-purple-trees-detail z-[4]"
-                style="border-top-left-radius: 20px 40px; border-top-right-radius: 25px 35px; transform: scaleX(1.02);">
-            </div>
+                <li>Memantau data real-time dari tongkat pintar</li>
+                <li>Melihat lokasi pengguna secara langsung</li>
+                <li>Menerima notifikasi saat terjadi kondisi darurat</li>
+                <li>Mengakses riwayat pergerakan dan aktivitas pengguna</li>
+            </ul>
         </div>
+    </main>
+
+    <!-- Landscape Layers (sekarang relatif terhadap body) -->
+    {{-- Warna lanskap mungkin perlu disesuaikan agar kontras dengan gradien baru jika warnanya sama --}}
+    <div class="relative bottom-0 left-0 w-full h-[40%] sm:h-[50%] md:h-[55%] z-10 pointer-events-none mt-auto">
+        <div class="absolute bottom-0 left-0 w-full h-full bg-brand-purple-mountain-far z-[1]"
+            style="border-top-left-radius: 50% 20%; border-top-right-radius: 60% 30%;">
+        </div>
+        <div class="absolute bottom-0 left-0 w-[110%] h-[80%] bg-brand-purple-mountain-mid z-[2]"
+            style="border-top-left-radius: 40% 30%; border-top-right-radius: 55% 25%; transform: translateX(-5%);">
+        </div>
+        <div class="absolute bottom-0 left-0 w-full h-[60%] bg-brand-purple-forest-front z-[3]"
+            style="border-top-left-radius: 30px 60px; border-top-right-radius: 40px 50px;">
+        </div>
+        <div class="absolute bottom-0 left-0 w-[105%] h-[50%] bg-brand-purple-trees-detail z-[4]"
+            style="border-top-left-radius: 20px 40px; border-top-right-radius: 25px 35px; transform: scaleX(1.02);">
+        </div>
+    </div>
 
 </body>
 

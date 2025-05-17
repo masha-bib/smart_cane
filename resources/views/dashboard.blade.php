@@ -1,62 +1,46 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{{ config('app.name', 'Laravel') }}</title>
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+<!-- Leaflet CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+    integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+    integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
 
-    <!-- Leaflet CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
-        integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
-        integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+<!-- Scripts -->
+@vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    <!-- Styles -->
-    @livewireStyles <!-- Jika menggunakan Livewire -->
+<!-- Styles -->
+@livewireStyles <!-- Jika menggunakan Livewire -->
 
 
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
-    </x-slot>
+    <!-- Peta Lokasi Pengguna -->
+    <div class="mt-8">
+        <div class="p-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                Peta Lokasi
+            </h3>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    {{ __("You're logged in!") }}
-                </div>
+            {{-- Kontainer pembungkus untuk peta dan tombol --}}
+            <div class="relative"> {{-- Tambahkan kelas 'relative' di sini --}}
+                {{-- Peta Leaflet --}}
+                <div id="dashboardMap" style="height: 450px; width: 100%; border-radius: 8px;"></div>
+                {{-- Tombol "Ke Lokasi Saya" diposisikan relatif terhadap kontainer di atas --}}
+                <button id="goToMyLocation" style="position: absolute; bottom: 10px; left: 10px; z-index: 1000;"
+                    class="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors">
+                    Ke Lokasi Saya
+                </button>
             </div>
 
-            <!-- Peta Lokasi Pengguna -->
-            <div class="mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                        Peta Lokasi 
-                    </h3>
-                    <div id="dashboardMap" style="height: 450px; width: 100%; border-radius: 8px;"></div>
-                    <div id="locationStatus" class="mt-2 text-sm text-gray-600 dark:text-gray-400">Mencari lokasi
-                        Anda...
-                    </div>
-                    <div style="position: relative;">
-                        <div id="dashboardMap" style="height: 50px; border-radius: 8px;"></div>
-                        <button id="goToMyLocation"style =" position: absolute; top: 10px; right: 10px; z-index: 1000;"
-                            class="px-3 py-2 bg-blue-600 text-white text-sm rounded shadow hover:bg-blue-700">
-                            Ke Lokasi Saya
-                        </button>
-                    </div>
-                </div>
-            </div>
-
+            <div id="locationStatus" class="mt-2 text-sm text-gray-600 dark:text-gray-400">Mencari lokasi Anda...</div>
         </div>
     </div>
 
@@ -220,7 +204,17 @@
                             dashboardMap.setView(lastKnownLatLng, 17);
                             console.log('Zoom ke lokasi pengguna.');
                         } else {
-                            alert("Lokasi anda belum ditemukan.");
+                            // Menggunakan SweetAlert sebagai pengganti alert()
+                            Swal.fire({
+                                icon: 'warning', // Ikon peringatan
+                                title: 'Lokasi Belum Ditemukan',
+                                text: 'Silakan tunggu beberapa saat hingga lokasi Anda terdeteksi atau pastikan layanan lokasi aktif.',
+                                confirmButtonText: 'Mengerti',
+                                // Tambahkan kustomisasi lain jika perlu, misalnya:
+                                // customClass: {
+                                // confirmButton: 'tombol-tailwind-anda'
+                                // }
+                            });
                         }
                     });
                 }
