@@ -19,6 +19,9 @@ backdrop-blur-md border-b border-gray-700 border-opacity-30 dark:border-gray-600
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('chart_app')" :active="request()->routeIs('chart_app')">
+                        {{ __('Chart') }}
+                    </x-nav-link>
                 </div>
             </div>
 
