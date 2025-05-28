@@ -1,181 +1,148 @@
 <?php
-namespace App\Http\Controllers\Api; // Namespace sudah benar
+
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Location; // Pastikan model diimpor
+use App\Models\Location; // Model untuk data lokasi
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;     // TAMBAHKAN INI
-use Illuminate\Support\Facades\Log;      // Untuk logging
-use Illuminate\Support\Facades\Storage;  // TAMBAHKAN INI
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;              // TAMBAHKAN INI
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class LocationController extends Controller
 {
-    // Metode index() dan store() Anda yang sudah ada
-    public function index()
-    {
-        // Jika Anda masih menggunakan 'name' dan 'description' dari tabel lama, sertakan di sini
-        $locations = Location::orderBy('created_at', 'desc')->take(100)->get(['id', /*'name',*/ 'device_id', 'latitude', 'longitude', /*'description',*/ 'image_url']);
-        return response()->json($locations);
-    }
-
-    public function store(Request $request) // Untuk input manual jika masih dipakai
-    {
-        $validated = $request->validate([
-            // Sesuaikan field ini dengan $fillable di Model Location Anda jika store() masih dipakai
-            // 'name' => 'required|string|max:255',
-            'device_id' => 'required|string|max:50', // Tambahkan device_id jika store() juga untuk IoT
-            'latitude' => 'required|numeric|between:-90,90',
-            'longitude' => 'required|numeric|between:-180,180',
-            // 'description' => 'nullable|string',
-        ]);
-        // Jika Anda ingin mengambil gambar juga saat store manual, panggil _captureAndSaveImage()
-        $location = Location::create($validated);
-        return response()->json($location, 201);
-    }
-
     /**
-     * Menerima data dari SmartCane (ESP32 GPS), mengambil gambar dari ESP32-CAM,
-     * dan menyimpannya. INI YANG AKAN DIPANGGIL OLEH ESP32 (GPS) ANDA.
+     * Menyimpan data lokasi baru dari perangkat.
      */
-    public function updateLocation(Request $request) // Nama method tetap sama
+    public function updateLocation(Request $request)
     {
-        Log::info('SmartCane updateLocation request received: ', $request->all());
-
-        // Validasi data dari ESP32 (GPS)
-        $validator = Validator::make($request->all(), [
-            'device_id' => 'required|string|max:50',
-            'latitude' => 'required|numeric|between:-90,90',
-            'longitude' => 'required|numeric|between:-180,180',
-            'satellites' => 'nullable|integer|min:0',
-            'hdop' => 'nullable|numeric|min:0',
-            'event_detected' => 'nullable|string|max:255', // Opsional, jika ESP32 mengirim
-            'voice_alert' => 'nullable|string|max:255',  // Opsional, jika ESP32 mengirim
+        // Validasi input dari ESP32
+        $validatedData = $request->validate([
+            'device_id' => 'required|string|max:255',
+            'latitude' => 'required|numeric|between:-90,90', // Validasi rentang latitude
+            'longitude' => 'required|numeric|between:-180,180', // Validasi rentang longitude
+            'satellites' => 'sometimes|nullable|integer|min:0',
+            'hdop' => 'sometimes|nullable|numeric|min:0',
+            // 'gps_timestamp' => 'sometimes|nullable|date_format:Y-m-d H:i:s' // Jika Anda memutuskan mengirim timestamp dari GPS
         ]);
-
-        if ($validator->fails()) {
-            Log::error('SmartCane validation failed: ', $validator->errors()->toArray());
-            return response()->json(['errors' => $validator->errors()], 400);
-        }
-
-        $validatedData = $validator->validated();
-        $deviceId = $validatedData['device_id'];
-
-        // Panggil helper untuk mengambil dan menyimpan gambar
-        $imageData = $this->_captureAndSaveImage($deviceId);
 
         try {
-            // Buat record baru di tabel locations
+            // Menggunakan Eloquent Model untuk membuat record baru
             $location = Location::create([
-                'device_id'   => $deviceId,
-                'latitude'    => $validatedData['latitude'],
-                'longitude'   => $validatedData['longitude'],
-                'satellites'  => $validatedData['satellites'] ?? null,
-                'hdop'        => $validatedData['hdop'] ?? null,
-                'image_url'   => $imageData['url'] ?? null,    // Simpan URL gambar
-                'image_path'  => $imageData['path'] ?? null,   // Simpan path gambar
-                'event_detected' => $validatedData['event_detected'] ?? null, // Simpan jika ada
-                'voice_alert'  => $validatedData['voice_alert'] ?? null,    // Simpan jika ada
-                // 'name' dan 'description' tidak diisi dari sini, karena ini dari IoT device
+                'device_id' => $validatedData['device_id'],
+                'latitude' => $validatedData['latitude'],
+                'longitude' => $validatedData['longitude'],
+                'satellites' => $validatedData['satellites'] ?? null, // Gunakan null jika tidak ada
+                'hdop' => $validatedData['hdop'] ?? null,             // Gunakan null jika tidak ada
+                // 'recorded_at_gps' => $validatedData['gps_timestamp'] ?? null, // Jika ada
             ]);
 
-            Log::info("SmartCane location data (ID: {$location->id}) and image (if any) saved for device {$deviceId}");
-            return response()->json([
-                'message' => 'Location and image (if any) updated successfully',
-                'data' => $location
-            ], 201);
+            Log::info('LocationAPI: Location data stored successfully for device: ' . $validatedData['device_id'], ['data' => $location->toArray()]);
+            return response()->json(['message' => 'Location data received and stored successfully.', 'data' => $location], 201); // 201 Created
+
+        } catch (\Illuminate\Database\QueryException $qe) {
+            Log::error('LocationAPI: Database query error while storing location data. Error: ' . $qe->getMessage(), ['sql' => $qe->getSql(), 'bindings' => $qe->getBindings()]);
+            return response()->json(['error' => 'Failed to store location data due to a database issue.', 'details' => $qe->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error("SmartCane failed to save location for device {$deviceId}: ".$e->getMessage(), ['exception_trace' => $e->getTraceAsString()]);
-            return response()->json(['message' => 'Failed to save location data', 'error' => $e->getMessage()], 500);
+            Log::error('LocationAPI: General error while storing location data. Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to store location data.', 'details' => $e->getMessage()], 500);
         }
-    }
-
-    /**
-     * Helper method (private) untuk mengambil gambar dari ESP32-CAM dan menyimpannya.
-     * Mengembalikan array ['url' => ..., 'path' => ...] atau null jika gagal.
-     */
-    private function _captureAndSaveImage(string $deviceId): ?array
-    {
-        $esp32CamIp = env('ESP32_CAM_IP');
-        $esp32CamEndpoint = env('ESP32_CAM_CAPTURE_ENDPOINT', '/capture');
-
-        if (!$esp32CamIp) {
-            Log::warning("ESP32_CAM_IP not configured. Skipping image capture for device {$deviceId}.");
-            return null;
-        }
-
-        $captureUrl = "http://{$esp32CamIp}{$esp32CamEndpoint}";
-        Log::info("Attempting to capture image for device {$deviceId} from: {$captureUrl}");
-
-        try {
-            // Timeout disesuaikan (misal 3-4 detik jika update GPS setiap 5 detik)
-            $response = Http::timeout(4)->retry(1, 100)->get($captureUrl);
-
-            if ($response->successful()) {
-                $imageContents = $response->body();
-                $imageFileName = 'captures/' . $deviceId . '_' . time() . '_' . Str::random(6) . '.jpg';
-                
-                if (Storage::disk('public')->put($imageFileName, $imageContents)) {
-                    Log::info("Image captured and saved for device {$deviceId} to: {$imageFileName}");
-                    return [
-                        'url' => Storage::url($imageFileName),
-                        'path' => $imageFileName,
-                    ];
-                } else {
-                    Log::error("Failed to save image to storage for device {$deviceId}. Check permissions for storage/app/public/captures.");
-                }
-            } else {
-                Log::error("Failed to capture image from ESP32-CAM for device {$deviceId}. HTTP Status: " . $response->status() . " - Response: " . substr($response->body(), 0, 200));
-            }
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::error("Connection to ESP32-CAM (device {$deviceId}) failed: " . $e->getMessage());
-        } catch (\Exception $e) {
-            Log::error("Generic error during image capture for device {$deviceId}: " . $e->getMessage());
-        }
-        return null;
     }
 
 
     /**
-     * Mengambil data lokasi terbaru untuk device tertentu untuk ditampilkan di Leaflet.
+     * Mengambil data lokasi terbaru UNTUK DEVICE TERTENTU untuk ditampilkan di Leaflet,
+     * DAN MENGAMBIL GAMBAR DETEKSI TERBARU DARI TABEL 'deteksi_objek'.
      */
     public function getLatestLocation($deviceId)
     {
-        Log::info("API Request: Fetching latest location for device_id: {$deviceId}");
+        Log::info("LocationAPI: Fetching latest location for device_id: {$deviceId}");
         try {
+            // 1. Ambil data lokasi terbaru untuk device_id dari tabel 'locations'
             $location = Location::where('device_id', $deviceId)
-                                ->orderBy('created_at', 'desc')
+                                ->orderBy('created_at', 'desc') // Asumsi 'created_at' adalah timestamp saat record lokasi dibuat
                                 ->first();
 
-            if ($location) {
+            // Variabel untuk menyimpan informasi gambar dari Python
+            $pythonDetectedImageUrl = null;
+            $pythonDetectedObject = null;
+            $pythonDetectedTimestamp = null;
+
+            // 2. Ambil gambar deteksi terbaru dari tabel 'deteksi_objek' (database smart_cane)
+            try {
+                // ---- PERUBAHAN DI SINI ----
+                $latestDetectionFromPython = DB::table('deteksi_objek') // Menggunakan tabel 'deteksi_objek'
+                                            ->orderBy('waktu', 'desc')    // Order by 'waktu' dari tabel deteksi_objek
+                                            ->first();
+
+                if ($latestDetectionFromPython) {
+                    // Pastikan kolom 'nama_file' dan 'kategori' ada
+                    if (!empty($latestDetectionFromPython->nama_file) && isset($latestDetectionFromPython->kategori)) {
+                        // Membuat URL menggunakan route yang sudah kita definisikan di web.php
+                        $pythonDetectedImageUrl = route('serve.detected.image', ['filename' => $latestDetectionFromPython->nama_file]);
+                        $pythonDetectedObject = $latestDetectionFromPython->kategori; // Menggunakan kolom 'kategori'
+                        $pythonDetectedTimestamp = $latestDetectionFromPython->waktu ? Carbon::parse($latestDetectionFromPython->waktu)->isoFormat('D MMMM YYYY, HH:mm:ss') : null;
+
+                        Log::info("LocationAPI: Found latest Python detection from 'deteksi_objek': Filename - {$latestDetectionFromPython->nama_file}, Object - {$pythonDetectedObject}");
+                    } else {
+                        Log::warning("LocationAPI: Latest detection found in 'deteksi_objek', but 'nama_file' or 'kategori' is missing/empty.", (array) $latestDetectionFromPython);
+                    }
+                } else {
+                    Log::info("LocationAPI: No recent Python detection found in 'deteksi_objek'.");
+                }
+                // ---- AKHIR PERUBAHAN ----
+            } catch (\Exception $e_db_python_img) {
+                Log::error("LocationAPI: Error fetching latest Python detection from 'deteksi_objek': " . $e_db_python_img->getMessage());
+                // Tidak menghentikan proses, biarkan $pythonDetectedImageUrl tetap null jika error
+            }
+
+
+            if ($location) { // Jika data lokasi ditemukan
                 $responseData = [
                     'latitude'    => (float) $location->latitude,
                     'longitude'   => (float) $location->longitude,
-                    'accuracy'    => $location->hdop ? round((float) $location->hdop * 5, 0) : 50,
+                    // Akurasi bisa diambil dari HDOP jika ada, atau default
+                    'accuracy'    => $location->hdop ? round((float) $location->hdop * 5, 0) : 50, // Contoh sederhana
+                    'timestamp'   => $location->created_at->toIso8601String(), // Waktu data lokasi ini disimpan
+                    'device_id'   => $location->device_id,
+
+                    // Data dari deteksi_objek (Python)
+                    'image_url'   => $pythonDetectedImageUrl, // Ini adalah URL gambar terbaru dari Python
+                    'objects'     => $pythonDetectedObject ? [$pythonDetectedObject] : [], // Array objek terdeteksi
+                    'detection_timestamp' => $pythonDetectedTimestamp, // Timestamp kapan objek ini dideteksi oleh Python
+
+                    // Data lain dari tabel 'locations' jika ada dan relevan
                     'hdop'        => $location->hdop ? (float) $location->hdop : null,
                     'satellites'  => $location->satellites ? (int) $location->satellites : null,
-                    'timestamp'   => $location->created_at->toIso8601String(),
-                    'device_id'   => $location->device_id,
-                    'image_url'   => $location->image_url, // DIAMBIL DARI DATABASE
-                    'event_detected' => $location->event_detected, // Jika sudah ada di tabel
-                    'voice_alert' => $location->voice_alert,   // Jika sudah ada di tabel
-                    'objects'     => [], // Default, bisa diisi dari field lain jika ada
+                    // 'voice_alert' => $location->voice_alert, // Hapus jika tidak ada di tabel 'locations'
+                    // 'event_detected' => ..., // Hapus jika tidak ada di tabel 'locations'
                 ];
+                Log::info("LocationAPI: Returning combined location and latest detection data for device {$deviceId}.");
                 return response()->json($responseData);
-            } else {
-                Log::warning("API Request: No location data found for device_id: {$deviceId}");
+            } else { // Jika tidak ada data lokasi untuk device tersebut
+                Log::warning("LocationAPI: No location data found for device_id: {$deviceId}. Returning latest Python detection if available.");
+                // Tetap kirim data deteksi Python terbaru jika ada, meskipun lokasi device belum ada
+                // Ini memungkinkan dashboard menampilkan setidaknya gambar terbaru.
                 return response()->json([
-                    'message'     => 'Belum ada data dari SmartCane untuk device ini.',
-                    'latitude'    => null, 'longitude'   => null, 'accuracy'    => null,
-                    'hdop'        => null, 'satellites'  => null, 'image_url'   => null,
-                    'event_detected'=> null, 'voice_alert' => null, 'objects'     => [],
-                    'timestamp'   => now()->toIso8601String(), 'device_id'   => $deviceId
-                ], 200);
+                    'message'     => 'Belum ada data lokasi dari SmartCane untuk device ini.',
+                    'latitude'    => null,
+                    'longitude'   => null,
+                    'accuracy'    => null,
+                    'timestamp'   => now()->toIso8601String(), // Waktu saat ini karena tidak ada timestamp lokasi
+                    'device_id'   => $deviceId,
+                    'image_url'   => $pythonDetectedImageUrl,
+                    'objects'     => $pythonDetectedObject ? [$pythonDetectedObject] : [],
+                    'detection_timestamp' => $pythonDetectedTimestamp,
+                    'hdop'        => null,
+                    'satellites'  => null,
+                ], 200); // Mengembalikan 200 OK
             }
         } catch (\Exception $e) {
-            Log::error("API Request: Error fetching latest location for {$deviceId}: ".$e->getMessage() . ' - Stack: ' . $e->getTraceAsString());
-            return response()->json(['error' => 'Gagal mengambil data lokasi.', 'details' => $e->getMessage()], 500);
+            Log::error("LocationAPI: General error in getLatestLocation for {$deviceId}: ".$e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+            return response()->json(['error' => 'Gagal mengambil data lokasi.', 'details' => 'Server error, please check logs.'], 500);
         }
     }
+
+    // Jika ada method index, store, _captureAndSaveImage, pastikan juga sudah sesuai
+    // atau hapus jika tidak digunakan.
 }

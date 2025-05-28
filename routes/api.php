@@ -2,19 +2,28 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\LocationController; // PASTIKAN INI DIIMPOR (Api kecil)
-// use App\Http\Controllers\SmartCaneDataController; // Bisa dikomentari/dihapus jika tidak dipakai lagi untuk peta
+use App\Http\Controllers\Api\LocationController;   // Pastikan path ini benar jika LocationController ada di App\Http\Controllers\Api
+use App\Http\Controllers\ImageDetectionController; // Pastikan ImageDetectionController ada di App\Http\Controllers
 
-/* ... (middleware auth:sanctum) ... */
 
-// === ROUTE UNTUK MENERIMA DATA LOKASI DARI SMART CANE (ESP32) ===
-Route::post('/update-location', [LocationController::class, 'updateLocation']); // Ini sudah benar
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
 
-// === ROUTE UNTUK MENGAMBIL DATA LOKASI UNTUK PETA LEAFLET ===
-Route::get('/get-latest-location/{deviceId}', [LocationController::class, 'getLatestLocation']); // PASTIKAN INI AKTIF DAN BENAR
+// === ROUTE UNTUK DATA LOKASI DARI SMART CANE (ESP32) ===
+// Pastikan controller LocationController ada dan namespace-nya benar
+// Jika tidak ada atau belum digunakan, Anda bisa mengomentari blok ini
+if (class_exists(LocationController::class)) {
+    Route::post('/update-location', [LocationController::class, 'updateLocation']);
+    Route::get('/get-latest-location/{deviceId}', [LocationController::class, 'getLatestLocation']);
+}
 
-// Rute yang menggunakan SmartCaneDataController dan bernama 'api.smartcane.latest' bisa dikomentari atau dihapus
-// jika Anda tidak lagi menggunakannya untuk peta ini:
-// Route::get('/smartcane-latest-data', [SmartCaneDataController::class, 'getLatestSmartCaneData'])
-//      ->name('api.smartcane.latest');
+
+// === ROUTE UNTUK MENGAMBIL INFO DETEKSI GAMBAR TERBARU DARI DATABASE ===
+// Ini adalah route yang akan dipanggil oleh JavaScript di dashboard untuk polling data gambar.
+// Pastikan ImageDetectionController ada dan method getLatestDetectionInfoFromDb juga ada di dalamnya.
+if (class_exists(ImageDetectionController::class)) {
+    Route::get('/get-latest-detection-from-db', [ImageDetectionController::class, 'getLatestDetectionInfoFromDb']);
+}
+
 ?>

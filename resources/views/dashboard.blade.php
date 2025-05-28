@@ -29,50 +29,14 @@
 
     <style>
         /* CSS untuk Indikator Loading Sederhana */
-        .spinner {
-            border: 3px solid rgba(0, 0, 0, 0.1);
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            border-left-color: #007bff;
-            animation: spin 1s ease infinite;
-            display: none;
-        }
+        .spinner { border: 3px solid rgba(0, 0, 0, 0.1); width: 18px; height: 18px; border-radius: 50%; border-left-color: #007bff; animation: spin 1s ease infinite; display: none; }
         .dark .spinner { border-left-color: #3b82f6; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Style untuk gambar di popup Leaflet */
         .leaflet-popup-content img { max-width: 100%; height: auto; border-radius: 4px; margin-top: 5px; }
-
-        /* Ukuran font sangat kecil untuk info gambar */
         .text-xxs { font-size: 0.65rem; line-height: 0.85rem; }
-
-        /* Gaya untuk placeholder gambar terbaru */
-        #latestImageViewer {
-            min-height: 200px; /* Tinggi minimal untuk placeholder */
-            background-color: #e5e7eb; /* bg-gray-200 */
-            border: 2px dashed #d1d5db; /* border-gray-300 */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: #6b7280; /* text-gray-500 */
-            cursor: default; /* Default cursor, akan diubah jika ada gambar */
-            border-radius: 0.375rem; /* rounded-md */
-            overflow: hidden; /* Agar gambar tidak keluar dari border radius */
-        }
-        .dark #latestImageViewer {
-            background-color: #374151; /* dark:bg-gray-700 */
-            border-color: #4b5563; /* dark:border-gray-600 */
-            color: #9ca3af; /* dark:text-gray-400 */
-        }
-        #latestImageViewer img {
-            max-width: 100%;
-            max-height: 100%; /* Sesuaikan dengan min-height #latestImageViewer jika perlu */
-            height: auto; /* Jaga rasio aspek */
-            width: auto; /* Jaga rasio aspek, biarkan salah satu auto agar tidak terdistorsi */
-            object-fit: contain; /* Agar seluruh gambar terlihat tanpa terpotong */
-        }
+        #latestImageViewerPython { min-height: 200px; background-color: #e5e7eb; border: 2px dashed #d1d5db; display: flex; align-items: center; justify-content: center; text-align: center; color: #6b7280; cursor: default; border-radius: 0.375rem; overflow: hidden; }
+        .dark #latestImageViewerPython { background-color: #374151; border-color: #4b5563; color: #9ca3af; }
+        #latestImageViewerPython img { max-width: 100%; max-height: 100%; height: auto; width: auto; object-fit: contain; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(55, 65, 81, 0.3); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(107, 114, 128, 0.7); border-radius: 10px; }
@@ -103,19 +67,29 @@
                                 </div>
                             </div>
 
-                            {{-- Kolom Kanan: Gambar Terbaru dari SmartCane --}}
+                            {{-- Kolom Kanan: Gambar Terbaru dari Python Server --}}
                             <div class="w-full md:w-1/3 lg:w-1/4">
                                 <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow-md flex flex-col" style="height: 450px;">
                                     <h3 class="text-base md:text-lg font-semibold mb-3 border-b border-gray-300 dark:border-gray-600 pb-2 text-gray-900 dark:text-gray-100">
-                                        Gambar Terbaru
+                                        Gambar Deteksi Terbaru
                                     </h3>
-                                    <div id="latestImageViewer" class="flex-grow rounded-md mb-2" title="Klik untuk lihat detail & fokus peta">
-                                        <span>Menunggu gambar terbaru...</span>
+                                    <div id="latestImageViewerPython" class="flex-grow rounded-md mb-2" title="Klik untuk lihat detail">
+                                        {{-- PERUBAHAN BAGIAN INI UNTUK SERVER-SIDE RENDERING --}}
+                                        @if(isset($latestDetectedImage) && $latestDetectedImage && !empty($latestDetectedImage['filename']))
+                                            <img src="{{ route('serve.detected.image', ['filename' => $latestDetectedImage['filename']]) }}"
+                                                 alt="{{ $latestDetectedImage['filename'] }}"
+                                                 onclick="showImageModal('{{ route('serve.detected.image', ['filename' => $latestDetectedImage['filename']]) }}', '{{ $latestDetectedImage['filename'] }}')"
+                                                 style="cursor: pointer;">
+                                        @else
+                                            <span>Menunggu gambar deteksi...</span>
+                                        @endif
+                                        {{-- AKHIR PERUBAHAN --}}
                                     </div>
-                                    <div id="latestImageInfo" class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                                        <p id="latestImageTimestamp">Waktu: -</p>
-                                        <p id="latestImageCoords" class="truncate">Koordinat: -</p>
-                                        <p id="latestImageEvent" class="font-semibold">Event: -</p>
+                                    <div id="latestImageInfoPython" class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                                        {{-- PERUBAHAN BAGIAN INI UNTUK SERVER-SIDE RENDERING --}}
+                                        <p>Waktu: <span id="latestImageTimestampPython">{{ $latestDetectedImage['timestamp_formatted'] ?? '-' }}</span></p>
+                                        <p class="font-semibold">Objek: <span id="latestImageObjectPython">{{ $latestDetectedImage['detected_object'] ?? 'N/A' }}</span></p>
+                                        {{-- AKHIR PERUBAHAN --}}
                                     </div>
                                 </div>
                             </div>
@@ -133,7 +107,7 @@
                     <button onclick="closeImageModal()" class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white text-3xl leading-none" aria-label="Tutup modal">×</button>
                 </div>
                 <div class="flex-grow overflow-y-auto custom-scrollbar">
-                    <img id="modalImageSrc" src="" alt="Gambar Tercapture Detail" class="w-full h-auto rounded-md object-contain max-h-[calc(80vh-100px)]"> {{-- max-height disesuaikan --}}
+                    <img id="modalImageSrc" src="" alt="Gambar Tercapture Detail" class="w-full h-auto rounded-md object-contain max-h-[calc(80vh-100px)]">
                 </div>
                 <div class="mt-4 pt-3 border-t border-gray-300 dark:border-gray-700 text-right">
                      <button onclick="closeImageModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">Tutup</button>
@@ -143,36 +117,20 @@
 
         @push('scripts')
             <script>
+                // Fungsi-fungsi global untuk modal dan peta (tidak ada perubahan di sini)
                 let smartCaneMap = null;
-                let currentLatestImageData = null; // Menyimpan data {url, name, lat, lng, event} dari gambar terbaru
-
-                // Fungsi global untuk interaksi dari HTML (onclick)
-                function focusMapOnLocation(lat, lng) {
-                    if (smartCaneMap) {
-                        smartCaneMap.setView([lat, lng], 17);
-                    } else { console.warn("Peta belum siap untuk difokuskan."); }
-                }
-
+                function focusMapOnLocation(lat, lng) { if(smartCaneMap && lat && lng) smartCaneMap.setView([lat, lng], 18); }
                 function showImageModal(imageUrl, imageName) {
-                    const modal = document.getElementById('imageModal');
-                    const modalImage = document.getElementById('modalImageSrc');
-                    const modalTitle = document.getElementById('imageModalTitle');
-                    if (!modal || !modalImage || !modalTitle) { console.error("Elemen modal tidak ditemukan!"); return; }
-                    modalImage.src = imageUrl;
-                    modalTitle.textContent = imageName || 'Detail Gambar';
-                    modal.classList.remove('hidden');
-                    modal.classList.add('flex');
-                    document.body.style.overflow = 'hidden';
+                    document.getElementById('modalImageSrc').src = imageUrl;
+                    document.getElementById('imageModalTitle').textContent = imageName || 'Detail Gambar';
+                    document.getElementById('imageModal').classList.remove('hidden');
+                    document.getElementById('imageModal').classList.add('flex');
                 }
-
                 function closeImageModal() {
-                    const modal = document.getElementById('imageModal');
-                    if (!modal) return;
-                    modal.classList.add('hidden');
-                    modal.classList.remove('flex');
-                    document.body.style.overflow = 'auto';
+                    document.getElementById('imageModal').classList.add('hidden');
+                    document.getElementById('imageModal').classList.remove('flex');
+                    document.getElementById('modalImageSrc').src = ''; // Kosongkan src
                 }
-
                 function closeImageModalOutside(event) {
                     if (event.target === document.getElementById('imageModal')) {
                         closeImageModal();
@@ -180,25 +138,21 @@
                 }
 
                 document.addEventListener('DOMContentLoaded', function () {
-                    // --- Inisialisasi Peta SmartCane ---
                     const mapElement = document.getElementById('smartCaneMap');
                     const statusElement = document.getElementById('smartCaneStatus');
                     const goToBtn = document.getElementById('goToSmartCaneLocation');
                     const spinnerElement = document.getElementById('loadingSpinner');
-                    const latestImageViewer = document.getElementById('latestImageViewer');
-                    const imgTimestampEl = document.getElementById('latestImageTimestamp');
-                    const imgCoordsEl = document.getElementById('latestImageCoords');
-                    const imgEventEl = document.getElementById('latestImageEvent');
 
+                    // Elemen untuk gambar dari Python (sidebar kanan)
+                    const latestImageViewerPython = document.getElementById('latestImageViewerPython');
+                    const imgTimestampElPython = document.getElementById('latestImageTimestampPython');
+                    const imgObjectElPython = document.getElementById('latestImageObjectPython');
 
-                    function handleLibraryError(message, mapId, statusId) {
-                        console.error(message);
-                        const mapDiv = document.getElementById(mapId);
-                        const statusDiv = document.getElementById(statusId);
-                        if (mapDiv) mapDiv.innerHTML = `<p style="color:red; text-align:center; padding:20px;">Error: Peta gagal dimuat (${message}).</p>`;
-                        if (statusDiv) statusDiv.textContent = 'Gagal memuat komponen peta.';
-                    }
+                    // PERUBAHAN: Mengambil nama file awal dari data yang di-render server-side
+                    let currentPythonImageFilename = "{{ (isset($latestDetectedImage) && $latestDetectedImage && !empty($latestDetectedImage['filename'])) ? addslashes($latestDetectedImage['filename']) : '' }}";
 
+                    // Fungsi utilitas (tidak ada perubahan di sini)
+                    function handleLibraryError(message, mapId, statusId) { if(document.getElementById(statusId)) document.getElementById(statusId).innerHTML = `<span class="text-red-500">${message}</span>`; if(document.getElementById(mapId)) document.getElementById(mapId).innerHTML = `<div class="flex items-center justify-center h-full"><span class="text-red-500">${message}</span></div>`; console.error(message); }
                     if (typeof L === 'undefined') { handleLibraryError('Leaflet (L) TIDAK terdefinisi.', 'smartCaneMap', 'smartCaneStatus'); return; }
                     if (typeof Swal === 'undefined') { window.Swal = { fire: (options) => alert(options.text || options.title || JSON.stringify(options)) }; }
 
@@ -206,81 +160,66 @@
                     let smartCaneAccuracyCircle = null;
                     let lastKnownSmartCaneLatLng = null;
                     let firstDataUpdate = true;
-                    const initialLat = -2.548926; // Indonesia Tengah
-                    const initialLng = 118.014863;
-                    const initialZoom = 5;
-                    const deviceId = 'smartcane_001'; // Ganti dengan ID device Anda
-                    const API_ENDPOINT_SMARTCANE = `/api/get-latest-location/${deviceId}`;
-                    const FETCH_INTERVAL_MS = 7000; // Interval fetch data
+                    const initialLat = -2.548926; const initialLng = 118.014863; const initialZoom = 5; // Koordinat tengah Indonesia
+                    const deviceId = 'smartcane_001'; // Ganti jika deviceId dinamis
+                    const API_ENDPOINT_SMARTCANE_LOCATION = `/api/get-latest-location/${deviceId}`;
+                    const FETCH_LOCATION_INTERVAL_MS = 7000;
 
+                    // PERUBAHAN: Endpoint dan interval untuk polling gambar dari Python
+                    const API_ENDPOINT_PYTHON_IMAGE = '/api/get-latest-detection-from-db';
+                    const FETCH_PYTHON_IMAGE_INTERVAL_MS = 5000; // Misal, 5 detik
+
+                    // Fungsi utilitas (tidak ada perubahan di sini)
                     function showSpinner() { if (spinnerElement) spinnerElement.style.display = 'block'; }
                     function hideSpinner() { if (spinnerElement) spinnerElement.style.display = 'none'; }
+                    function updateStatus(message, isError = false) { if (statusElement) { statusElement.textContent = message; statusElement.classList.toggle('text-red-500', isError); statusElement.classList.toggle('dark:text-red-400', isError); } }
+                    function formatTimestamp(isoString) { if (!isoString) return 'N/A'; try { const date = new Date(isoString); return date.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'medium' }); } catch (e) { return isoString; } }
 
-                    function updateStatus(message, isError = false) {
-                        if (statusElement) {
-                            statusElement.textContent = message;
-                            const isDarkMode = document.documentElement.classList.contains('dark');
-                            statusElement.style.color = isError ? '#ef4444' : (isDarkMode ? '#cbd5e1' : '#4b5563');
-                        }
-                    }
-
-                    function formatTimestamp(isoString) {
-                        if (!isoString) return 'N/A';
-                        try { return new Date(isoString).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'medium' }); }
-                        catch (e) { return isoString; }
-                    }
 
                     if (!mapElement) { updateStatus('Error: Elemen peta tidak ditemukan.', true); return; }
-
                     smartCaneMap = L.map('smartCaneMap').setView([initialLat, initialLng], initialZoom);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', maxZoom: 19
                     }).addTo(smartCaneMap);
 
-                    async function fetchSmartCaneData() {
+                    async function fetchSmartCaneLocationData() { /* ... (fungsi ini tetap sama seperti sebelumnya) ... */
                         showSpinner();
-                        updateStatus('Mengambil data SmartCane terkini...');
+                        updateStatus('Mengambil data lokasi SmartCane...');
                         try {
-                            const response = await fetch(API_ENDPOINT_SMARTCANE);
+                            const response = await fetch(API_ENDPOINT_SMARTCANE_LOCATION);
                             if (!response.ok) {
-                                let errorMsg = `HTTP error ${response.status}`;
-                                try { const errData = await response.json(); errorMsg += `: ${errData.message || response.statusText}`; } catch (e) { errorMsg += `: ${response.statusText}`; }
-                                throw new Error(errorMsg);
+                                updateStatus(`Error lokasi: HTTP ${response.status}`, true);
+                                if (response.status === 404) {
+                                    updateStatus(`SmartCane dengan ID '${deviceId}' tidak ditemukan atau belum ada data.`, true);
+                                }
+                                throw new Error(`HTTP error ${response.status}`);
                             }
                             const data = await response.json();
-                            processSmartCaneData(data);
+                            processSmartCaneLocationData(data);
                         } catch (error) {
-                            updateStatus(`Error: ${error.message}`, true);
+                            console.error('Error fetchSmartCaneLocationData:', error);
+                            updateStatus(`Error mengambil data lokasi: ${error.message}`, true);
                         } finally {
                             hideSpinner();
                         }
                     }
 
-                    function processSmartCaneData(data) {
-                        if (!data || data.latitude == null || data.longitude == null) { // Periksa null atau undefined
-                            updateStatus(data?.message || 'Data lokasi SmartCane tidak valid.');
-                            if (latestImageViewer) latestImageViewer.innerHTML = '<span>Gagal memuat gambar atau data lokasi tidak valid.</span>';
-                            if (imgTimestampEl) imgTimestampEl.textContent = 'Waktu: -';
-                            if (imgCoordsEl) imgCoordsEl.textContent = 'Koordinat: -';
-                            if (imgEventEl) imgEventEl.textContent = 'Event: -';
-                            currentLatestImageData = null;
+                    function processSmartCaneLocationData(data) { /* ... (fungsi ini tetap sama seperti sebelumnya) ... */
+                        if (!data || data.latitude == null || data.longitude == null) {
+                            updateStatus(data?.message || 'Data lokasi SmartCane tidak valid atau tidak ditemukan.');
                             if (smartCaneMarker) { smartCaneMap.removeLayer(smartCaneMarker); smartCaneMarker = null; }
                             if (smartCaneAccuracyCircle) { smartCaneMap.removeLayer(smartCaneAccuracyCircle); smartCaneAccuracyCircle = null; }
                             lastKnownSmartCaneLatLng = null;
                             return;
                         }
-
                         const caneLatLng = L.latLng(data.latitude, data.longitude);
                         lastKnownSmartCaneLatLng = caneLatLng;
                         const timestampFormatted = formatTimestamp(data.timestamp);
                         updateStatus(`Lokasi: ${parseFloat(data.latitude).toFixed(5)}, ${parseFloat(data.longitude).toFixed(5)} (Update: ${timestampFormatted})`);
-
-                        // Update Peta
                         let popupContent = `<b>SmartCane ${deviceId}</b><br>Posisi: ${parseFloat(data.latitude).toFixed(5)}, ${parseFloat(data.longitude).toFixed(5)}<br>Akurasi: ${data.accuracy ? data.accuracy.toFixed(0) + 'm' : 'N/A'}<br>Waktu: ${timestampFormatted}`;
-                        if (data.objects && data.objects.length) popupContent += `<br>Objek: ${data.objects.join(', ')}`;
+                        if (data.objects && data.objects.length) popupContent += `<br>Objek (di Lokasi): ${data.objects.join(', ')}`;
                         if (data.voice_alert) popupContent += `<br>Suara: ${data.voice_alert}`;
-                        if (data.image_url) popupContent += `<br><img src="${data.image_url}" alt="Gambar SmartCane">`;
-
+                        if (data.image_url) popupContent += `<br><img src="${data.image_url}" alt="Gambar di Lokasi SmartCane">`; // Untuk backward compatibility jika API lokasi masih mengirim ini
                         const accuracyRadius = data.accuracy ? Math.max(parseFloat(data.accuracy), 5) : 30;
                         if (!smartCaneMarker) {
                             smartCaneMarker = L.marker(caneLatLng).addTo(smartCaneMap);
@@ -291,63 +230,83 @@
                         }
                         smartCaneMarker.bindPopup(popupContent).openPopup();
                         if (firstDataUpdate) { smartCaneMap.setView(caneLatLng, 17); firstDataUpdate = false; }
+                    }
 
-                        // Update Gambar Terbaru di Sidebar
-                        currentLatestImageData = {
-                            url: data.image_url,
-                            name: `Gambar @ ${timestampFormatted} (${data.event_detected || 'Normal'})`,
-                            lat: data.latitude,
-                            lng: data.longitude,
-                            event: data.event_detected || null
-                        };
 
-                        if (latestImageViewer) {
-                            if (currentLatestImageData.url) {
-                                latestImageViewer.innerHTML = `<img src="${currentLatestImageData.url}" alt="Gambar terbaru">`;
-                                latestImageViewer.style.cursor = 'pointer';
-                                latestImageViewer.onclick = () => {
-                                    showImageModal(currentLatestImageData.url, currentLatestImageData.name);
-                                    focusMapOnLocation(currentLatestImageData.lat, currentLatestImageData.lng);
-                                };
-                            } else {
-                                latestImageViewer.innerHTML = '<span>Tidak ada gambar terbaru.</span>';
-                                latestImageViewer.style.cursor = 'default';
-                                latestImageViewer.onclick = null;
+                    // PERUBAHAN: Fungsi untuk mengambil dan memperbarui gambar dari Python (sidebar kanan)
+                    async function fetchAndUpdatePythonImage() {
+                        try {
+                            const response = await fetch(API_ENDPOINT_PYTHON_IMAGE);
+                            if (!response.ok) {
+                                // Jika respons tidak OK (misal 404 No data), kita tidak perlu update gambar
+                                // tapi mungkin ingin membersihkan tampilan jika sebelumnya ada gambar
+                                if (response.status === 404 && latestImageViewerPython) {
+                                    if (currentPythonImageFilename || !latestImageViewerPython.textContent.includes('Menunggu gambar deteksi...')) {
+                                        latestImageViewerPython.innerHTML = '<span>Tidak ada gambar deteksi baru.</span>';
+                                        if (imgTimestampElPython) imgTimestampElPython.textContent = '-';
+                                        if (imgObjectElPython) imgObjectElPython.textContent = 'N/A';
+                                        currentPythonImageFilename = ''; // Reset nama file saat ini
+                                    }
+                                } else {
+                                    console.warn('Polling gambar Python: Gagal mengambil info gambar, status:', response.status, await response.text());
+                                }
+                                return;
+                            }
+                            const result = await response.json();
+
+                            if (result && result.data && result.data.url && result.data.filename) {
+                                const newImageData = result.data;
+                                // Hanya update jika nama file berbeda (gambar baru) ATAU jika belum ada gambar sama sekali
+                                if (newImageData.filename !== currentPythonImageFilename || !currentPythonImageFilename) {
+                                    console.log('New Python image detected via API:', newImageData.filename);
+                                    currentPythonImageFilename = newImageData.filename;
+
+                                    if (latestImageViewerPython) {
+                                        latestImageViewerPython.innerHTML =
+                                            `<img src="${newImageData.url}" alt="${newImageData.filename}"
+                                                 onclick="showImageModal('${newImageData.url}', '${newImageData.filename}')"
+                                                 style="cursor: pointer;">`;
+                                    }
+                                    if (imgTimestampElPython) imgTimestampElPython.textContent = newImageData.timestamp || '-';
+                                    if (imgObjectElPython) imgObjectElPython.textContent = newImageData.detected_object || 'N/A';
+                                }
+                            } else if (latestImageViewerPython && !currentPythonImageFilename) {
+                                // Jika API merespons tapi tidak ada data.url atau data.filename
+                                // dan belum ada gambar yang ditampilkan.
+                                latestImageViewerPython.innerHTML = '<span>Data gambar tidak lengkap dari API.</span>';
+                                Log.warn('API merespon OK, tapi data gambar tidak lengkap:', result);
+                            }
+                        } catch (error) {
+                            console.error('Error polling gambar Python:', error);
+                            if (latestImageViewerPython) {
+                                latestImageViewerPython.innerHTML = '<span>Error mengambil gambar. Cek konsol.</span>';
                             }
                         }
-                        if (imgTimestampEl) imgTimestampEl.textContent = `Waktu: ${timestampFormatted}`;
-                        if (imgCoordsEl) imgCoordsEl.textContent = `Koordinat: ${parseFloat(data.latitude).toFixed(5)}, ${parseFloat(data.longitude).toFixed(5)}`;
-                        if (imgEventEl) {
-                            const eventText = currentLatestImageData.event ? `Event: ${currentLatestImageData.event}` : 'Event: Normal';
-                            imgEventEl.textContent = eventText;
-                            imgEventEl.className = 'text-xxs font-semibold'; // Reset class
-                            if (currentLatestImageData.event === 'Tombol Bantuan') imgEventEl.classList.add('text-red-600', 'dark:text-red-400');
-                            else if (currentLatestImageData.event) imgEventEl.classList.add('text-yellow-600', 'dark:text-yellow-400');
-                        }
-                    } // Akhir processSmartCaneData
-
-                    if (goToBtn) {
-                        goToBtn.addEventListener('click', function () {
-                            if (lastKnownSmartCaneLatLng) {
-                                smartCaneMap.setView(lastKnownSmartCaneLatLng, 17);
-                                if (smartCaneMarker) smartCaneMarker.openPopup();
-                            } else { Swal.fire({ icon: 'info', title: 'Lokasi Belum Ada', text: 'Data lokasi SmartCane belum diterima.' }); }
-                        });
                     }
 
-                    if (API_ENDPOINT_SMARTCANE && API_ENDPOINT_SMARTCANE.includes('/api/')) {
-                        fetchSmartCaneData();
-                        setInterval(fetchSmartCaneData, FETCH_INTERVAL_MS);
+
+                    if (goToBtn) { goToBtn.addEventListener('click', () => { if (lastKnownSmartCaneLatLng) { focusMapOnLocation(lastKnownSmartCaneLatLng.lat, lastKnownSmartCaneLatLng.lng); } else { Swal.fire('Info', 'Belum ada data lokasi SmartCane diterima.', 'info'); } }); }
+
+
+                    // Jalankan fetch data lokasi (jika endpointnya ada)
+                    if (typeof API_ENDPOINT_SMARTCANE_LOCATION !== 'undefined' && API_ENDPOINT_SMARTCANE_LOCATION && API_ENDPOINT_SMARTCANE_LOCATION.includes('/api/')) {
+                        fetchSmartCaneLocationData(); // Panggil sekali saat load
+                        setInterval(fetchSmartCaneLocationData, FETCH_LOCATION_INTERVAL_MS);
                     } else {
-                        updateStatus('Error: API Endpoint tidak valid.', true);
-                        Swal.fire({ icon: 'error', title: 'Konfigurasi Error', text: 'API Endpoint SmartCane tidak valid.' });
+                        updateStatus('API endpoint lokasi tidak valid atau tidak terdefinisi.', true);
+                        console.warn("API_ENDPOINT_SMARTCANE_LOCATION tidak valid atau tidak terdefinisi. Polling lokasi tidak akan berjalan.");
                     }
 
-                    document.addEventListener('keydown', function(event) {
-                        if (event.key === "Escape" && !document.getElementById('imageModal').classList.contains('hidden')) {
-                            closeImageModal();
-                        }
-                    });
+                    // Jalankan fetch gambar Python (jika endpointnya ada)
+                    if (API_ENDPOINT_PYTHON_IMAGE && API_ENDPOINT_PYTHON_IMAGE.includes('/api/')) {
+                        fetchAndUpdatePythonImage(); // Panggil sekali saat load untuk sinkronisasi awal
+                        setInterval(fetchAndUpdatePythonImage, FETCH_PYTHON_IMAGE_INTERVAL_MS);
+                    } else {
+                        console.warn("API_ENDPOINT_PYTHON_IMAGE tidak valid atau tidak terdefinisi. Polling gambar Python tidak akan berjalan.");
+                        if (latestImageViewerPython) latestImageViewerPython.innerHTML = '<span>Polling gambar tidak aktif.</span>';
+                    }
+
+                    document.addEventListener('keydown', function(event) { if (event.key === "Escape") { closeImageModal(); } });
                 }); // Akhir DOMContentLoaded
             </script>
         @endpush
