@@ -64,9 +64,9 @@ class SmartCaneChartController extends Controller
         $data = [];
         $colors = [];
         $totalDeteksi = 0;
-        $dataKosong = false; // <--- Inisialisasi flag dataKosong
+        $dataKosong = false; 
 
-        if ($jumlahPerKategori->isEmpty()) { // <--- Cek jika koleksi hasil query kosong
+        if ($jumlahPerKategori->isEmpty()) { 
             $dataKosong = true;
         } else {
             foreach ($jumlahPerKategori as $item) {
@@ -85,11 +85,10 @@ class SmartCaneChartController extends Controller
             'totalDeteksi' => $totalDeteksi,
         ];
 
-        // Kirim flag $dataKosong dan periode aktif ke view
         return view('chart_app', [
             'smartCaneDetectionData' => $dataUntukChart,
-            'dataKosong' => $dataKosong, // <--- Kirim flag ini
-            'periodeAktif' => $periode // Untuk menampilkan nama periode di pesan jika data kosong
+            'dataKosong' => $dataKosong, 
+            'periodeAktif' => $periode 
         ]);
     }
 }

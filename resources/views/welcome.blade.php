@@ -6,11 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Welcome To The Smart Cane</title>
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
 
-    <!-- Styles / Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
 </head>
@@ -22,7 +20,6 @@
 <body class="font-sans text-white flex flex-col min-h-screen relative
              bg-gradient-to-b from-brand-purple-mid-light to-brand-purple-deep">
 
-    <!-- Stars Effect (sekarang relatif terhadap body) -->
     <div class="absolute inset-0 z-0 pointer-events-none">
         @for ($i = 0; $i < 100; $i++) {{-- Jumlah bintang --}}
             <div class="absolute bg-white rounded-full animate-twinkle" style="
@@ -36,21 +33,12 @@
         @endfor
     </div>
 
-    <!-- Header (sekarang relatif terhadap body) -->
     <header
         class="relative z-20 flex flex-col md:flex-row justify-between items-center p-6 sm:p-8 w-full max-w-7xl mx-auto">
         <span
             class="self-center text-2xl font-semibold whitespace-nowrap text-gray-100 dark:text-white hover:text-indigo-400 dark:hover:text-indigo-300 transition-colors">
             Smart<span class="text-indigo-400 dark:text-indigo-300">Cane</span>
         </span>
-
-        {{-- Navigasi --}}
-        <nav class="hidden md:flex flex-wrap justify-center space-x-4 sm:space-x-6 text-sm my-4 md:my-0">
-            <a href="#" class="font-semibold hover:text-opacity-75 transition-opacity">HOME</a>
-            <a href="#" class="hover:text-opacity-75 transition-opacity">ABOUT US</a>
-            <a href="#" class="hover:text-opacity-75 transition-opacity">COURSE</a>
-            <a href="#" class="hover:text-opacity-75 transition-opacity">PRICING</a>
-        </nav>
 
         {{-- Navigasi Login/Register --}}
         @if (Route::has('login'))
@@ -77,7 +65,6 @@
         @endif
     </header>
 
-    <!-- Main Content (sekarang relatif terhadap body) -->
     <main class="relative z-20 text-center py-12 sm:py-16 md:py-20 px-4 flex-grow w-full max-w-5xl mx-auto">
         {{-- text-center di sini akan membantu memusatkan div anak jika div anak adalah inline-block --}}
 
@@ -113,7 +100,6 @@
         </div>
     </main>
 
-    <!-- Landscape Layers (sekarang relatif terhadap body) -->
     {{-- Warna lanskap mungkin perlu disesuaikan agar kontras dengan gradien baru jika warnanya sama --}}
     <div class="relative bottom-0 left-0 w-full h-[40%] sm:h-[50%] md:h-[55%] z-10 pointer-events-none mt-auto">
         <div class="absolute bottom-0 left-0 w-full h-full bg-brand-purple-mountain-far z-[1]"

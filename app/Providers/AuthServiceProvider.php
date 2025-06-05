@@ -22,10 +22,5 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerPolicies();
-
-        // Contoh jika Anda menggunakan Gate nanti:
-        // Gate::define('update-post', function (User $user, Post $post) {
-        //     return $user->id === $post->user_id;
-        // });
     }
 }

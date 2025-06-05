@@ -2,9 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-// use App\Http\Controllers\MapController; // Tidak terlihat digunakan
 use App\Http\Controllers\SmartCaneChartController;
-use App\Http\Controllers\PageDashboardController; // Pastikan ini ada jika Anda menggunakan controller ini untuk dashboard
+use App\Http\Controllers\PageDashboardController; 
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -28,15 +27,12 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/detected-images/{filename}', function ($filename) {
-    $pythonUploadPath = 'C:/laragon/smart_cane/upload'; // Path yang Anda berikan
+    $pythonUploadPath = 'C:/Users/Jakik/Documents/Iot_Olivia/upload'; 
 
-    // ---- PERBAIKAN KONDISI IF DI BAWAH INI ----
     if (empty($pythonUploadPath) || !is_dir(rtrim($pythonUploadPath, '/'))) {
         Log::error("Konfigurasi Path ke folder upload Python tidak valid atau direktori tidak ditemukan. Path yang dicek: '" . $pythonUploadPath . "'");
-        // Jangan tampilkan path mentah ke user untuk keamanan
         abort(500, 'Image directory server configuration error. Please check server logs.');
     }
-    // ---- AKHIR PERBAIKAN ----
 
     $safeFilename = basename($filename);
     if ($safeFilename !== $filename) {
@@ -52,8 +48,8 @@ Route::get('/detected-images/{filename}', function ($filename) {
     }
 
     try {
-        $fileContent = File::get($filePath); // Ubah nama variabel agar tidak bentrok dengan use statement
-        $mimeType = File::mimeType($filePath); // Ubah nama variabel
+        $fileContent = File::get($filePath); 
+        $mimeType = File::mimeType($filePath); 
 
         if (!$mimeType || !str_starts_with($mimeType, 'image/')) {
             Log::warning("File bukan gambar atau tipe MIME tidak dikenal: " . $filePath . " (Tipe terdeteksi: " . ($mimeType ?: 'Tidak ada') . ")");

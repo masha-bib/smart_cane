@@ -80,13 +80,9 @@
                     });
                 }
 
-                // Cek dari PHP apakah data kosong, jika ya, jangan jalankan script chart
-                // Variabel $dataKosong dan $smartCaneDetectionData dikirim dari Controller
                 const dataAdaUntukChart = {{ (isset($smartCaneDetectionData) && !empty($smartCaneDetectionData['labels']) && !empty($smartCaneDetectionData['data']) && !(isset($dataKosong) && $dataKosong)) ? 'true' : 'false' }};
 
                 if (dataAdaUntukChart) {
-                    // KODE JAVASCRIPT CHART ANDA YANG SUDAH BERHASIL (SAMA PERSIS SEPERTI YANG ANDA BERIKAN SEBELUMNYA)
-                    // Tidak ada perubahan di bawah baris ini sampai akhir blok if (dataAdaUntukChart)
                     const isDarkMode = document.documentElement.classList.contains('dark');
                     const legendTextColor = isDarkMode ? '#cbd5e1' : '#4b5563';
                     const tooltipBodyColor = isDarkMode ? '#e5e7eb' : '#1f2937';
@@ -100,11 +96,6 @@
                     console.log('Chart Script (App Layout): Data chart diterima dari PHP.', {!! json_encode($smartCaneDetectionData) !!});
 
                     const chartDataFromPHP = @json($smartCaneDetectionData);
-                    // console.log('--- DEBUG DATA CHART ---');
-                    // console.log('Isi lengkap chartDataFromPHP:', chartDataFromPHP);
-                    // console.log('Nilai chartDataFromPHP.totalDeteksi:', chartDataFromPHP.totalDeteksi);
-                    // console.log('Tipe data chartDataFromPHP.totalDeteksi:', typeof chartDataFromPHP.totalDeteksi);
-                    // console.log('--- AKHIR DEBUG DATA CHART ---');
 
                     const doughnutText = {
                         id: 'doughnutText',
@@ -182,8 +173,8 @@
                                                 position: 'bottom', align: 'center',
                                                 labels: { padding: 25, font: { size: 12 }, color: legendTextColor, usePointStyle: true, boxWidth: 10, boxHeight: 10 }
                                             },
-                                            tooltip: { /* ... kode tooltip Anda ... */ },
-                                            doughnutText: { // Ini adalah versi Anda yang sudah berhasil
+                                            tooltip: { },
+                                            doughnutText: { 
                                                 fontFamily: 'Arial, sans-serif',
                                                 fontSize: '50',
                                                 fontColor: '#F5F5F5F5',
@@ -199,8 +190,8 @@
                                     plugins: [doughnutText]
                                 });
                                 console.log('Chart Script (App Layout): Chart berhasil diinisialisasi dengan teks tengah.');
-                            } else { /* ... error context ... */ }
-                        } else { /* ... error canvas ... */ }
+                            } else { }
+                        } else { }
                     } else {
                          console.warn('Chart Script (App Layout): Data chart tidak valid atau properti hilang setelah cek awal. Data:', chartDataFromPHP);
                     }

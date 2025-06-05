@@ -18,28 +18,15 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        // Tambahkan event dan listener kustom Anda di sini
-        // Contoh:
-        // \App\Events\OrderShipped::class => [
-        //     \App\Listeners\SendShipmentNotification::class,
-        // ],
     ];
 
-    /**
-     * Register any events for your application.
-     */
     public function boot(): void
     {
         //
     }
 
-    /**
-     * Determine if events and listeners should be automatically discovered.
-     *
-     * @return bool
-     */
     public function shouldDiscoverEvents(): bool
     {
-        return false; // Atau true jika Anda ingin menggunakan auto-discovery
+        return false; 
     }
 }

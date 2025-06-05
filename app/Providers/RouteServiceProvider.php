@@ -19,9 +19,6 @@ class RouteServiceProvider extends ServiceProvider
      */
     public const HOME = '/dashboard'; // Sesuaikan jika home route Anda berbeda, misal /
 
-    /**
-     * Define your route model bindings, pattern filters, and other route configuration.
-     */
     public function boot(): void
     {
         $this->configureRateLimiting();

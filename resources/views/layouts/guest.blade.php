@@ -8,11 +8,9 @@
 
     <title>{{ config('app.name', 'Smart Cane') }} - {{ ucfirst(Route::currentRouteName()) }}</title>
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
 
-    <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -20,7 +18,6 @@
              flex flex-col min-h-screen relative
              bg-gradient-to-b from-brand-purple-mid-light to-brand-purple-deep text-white">
 
-    <!-- Stars Effect -->
     <div class="absolute inset-0 z-0 pointer-events-none">
         @for ($i = 0; $i < 70; $i++)
             <div class="absolute bg-white rounded-full animate-twinkle" style="

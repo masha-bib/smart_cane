@@ -11,21 +11,17 @@ class PageDashboardController extends Controller
 {
     public function index()
     {
-        $latestDetectedImageInfo = null; // Ubah nama variabel agar lebih jelas
+        $latestDetectedImageInfo = null; 
         try {
-            // Mengambil data deteksi terbaru berdasarkan kolom 'waktu' atau 'id'
             $latestDetection = DB::table('deteksi_objek')
-                                ->orderBy('waktu', 'desc') // Lebih disarankan order by waktu
-                                // ->orderBy('id', 'desc') // Alternatif jika id selalu berurutan dengan waktu
+                                ->orderBy('waktu', 'desc') 
                                 ->first();
 
             if ($latestDetection) {
-                // Pastikan kolom 'nama_file' dan 'kategori' ada dan tidak kosong
                 if (!empty($latestDetection->nama_file) && isset($latestDetection->kategori)) {
                     $latestDetectedImageInfo = [
-                        // URL akan dibangun di Blade menggunakan route 'serve.detected.image'
                         'filename' => $latestDetection->nama_file,
-                        'timestamp_iso' => $latestDetection->waktu, // Simpan ISO untuk JS jika perlu
+                        'timestamp_iso' => $latestDetection->waktu, 
                         'timestamp_formatted' => $latestDetection->waktu ? Carbon::parse($latestDetection->waktu)->isoFormat('D MMMM YYYY, HH:mm:ss') : 'N/A',
                         'detected_object' => $latestDetection->kategori,
                     ];
@@ -41,7 +37,7 @@ class PageDashboardController extends Controller
         }
 
         return view('dashboard', [
-            'latestDetectedImage' => $latestDetectedImageInfo, // Kirim data ke view
+            'latestDetectedImage' => $latestDetectedImageInfo, 
         ]);
     }
 }

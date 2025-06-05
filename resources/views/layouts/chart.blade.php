@@ -8,7 +8,6 @@
 
     <title>IoT Dashboard</title>
 
-    <!-- Fonts (Sama seperti app.blade.php, opsional) -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     {{-- Menggunakan font Instrument Sans dari config Anda --}}
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600&display=swap" rel="stylesheet" />
@@ -23,11 +22,10 @@
     {{-- @livewireStyles (jika digunakan) --}}
 
     <style>
-        /* Scrollbar kustom dari chart.blade.php Anda */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #374151; } /* Warna track disesuaikan untuk tema gelap */
-        ::-webkit-scrollbar-thumb { background: #6b7280; border-radius: 4px; } /* Warna thumb disesuaikan */
-        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; } /* Warna thumb hover disesuaikan */
+        ::-webkit-scrollbar-track { background: #374151; }
+        ::-webkit-scrollbar-thumb { background: #6b7280; border-radius: 4px; } 
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; } 
     </style>
 </head>
 {{-- Menggunakan fontFamily dari config Anda: 'Instrument Sans' akan menjadi default sans-serif --}}
@@ -35,7 +33,6 @@
 
     {{-- Div luar untuk background ungu dan bintang (SAMA DENGAN app.blade.php) --}}
     <div class="min-h-screen relative bg-brand-purple-deep text-gray-200">
-        <!-- Stars Effect (SAMA DENGAN app.blade.php) -->
         <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
             @for ($i = 0; $i < 70; $i++)
                 {{-- Menggunakan kelas animate-twinkle dari config Anda --}}
@@ -59,7 +56,7 @@
             </aside>
             --}}
 
-            <!-- Main content area -->
+            <!-- Main content -->
             <div class="flex-1 flex flex-col overflow-hidden">
                 {{-- Jika Anda memiliki header/top bar global untuk IoT Dashboard, letakkan di sini --}}
                 {{-- Contoh:
